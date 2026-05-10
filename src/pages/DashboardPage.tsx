@@ -12,7 +12,7 @@ import { apiFetch } from "@/lib/api";
 import { staggerContainer, staggerItem, smooth } from "@/lib/motion";
 
 type Business = { id: string; name: string };
-type PlanRow = { id: string; total_amount: number; status: string; customer_id: string; payment_method?: string; customers: { phone?: string; email?: string } | null };
+type PlanRow = { id: string; plan_name?: string | null; total_amount: number; status: string; customer_id: string; payment_method?: string; customers: { name?: string | null; phone?: string; email?: string } | null };
 
 const statusStyles: Record<string, { color: string; icon: typeof Clock }> = {
   pending_mandate: { color: "text-amber-400 bg-amber-400/10", icon: Clock },
@@ -141,8 +141,11 @@ export function DashboardPage() {
                             className="flex flex-col gap-4 rounded-xl border border-border/40 bg-card/30 p-5 transition-all hover:border-border/60 hover:bg-card/50 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0 space-y-1.5">
                               <p className="truncate font-semibold text-foreground">
-                                {p.customers?.email ?? p.customers?.phone ?? "Unknown customer"}
+                                {p.customers?.name ?? p.customers?.email ?? p.customers?.phone ?? "Unknown customer"}
                               </p>
+                              {p.plan_name && (
+                                <p className="truncate text-sm text-muted-foreground">{p.plan_name}</p>
+                              )}
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="text-lg font-bold tabular-nums">&#8358;{Number(p.total_amount).toLocaleString("en-NG")}</p>
                                 <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${st.color}`}>

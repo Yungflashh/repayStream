@@ -36,6 +36,8 @@ export function CreatePlanForm() {
     newIdempotencyKey()
   );
 
+  const [customerName, setCustomerName] = useState("");
+  const [planName, setPlanName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
@@ -63,11 +65,12 @@ export function CreatePlanForm() {
 
   const dirty = useMemo(() => {
     if (paymentType === "installments") return true;
+    if (customerName.trim() || planName.trim()) return true;
     if (phone.trim() || email.trim() || amount.trim()) return true;
     if (dueDate || firstDueDate) return true;
     if (customRows.some((r) => r.amount.trim() || r.due_date)) return true;
     return false;
-  }, [paymentType, phone, email, amount, dueDate, firstDueDate, customRows]);
+  }, [paymentType, customerName, planName, phone, email, amount, dueDate, firstDueDate, customRows]);
 
   const builtSchedule = useMemo((): ScheduleRow[] | null => {
     const totalK = parseAmountToKobo(amount);
@@ -104,6 +107,7 @@ export function CreatePlanForm() {
   ]);
 
   const validationMessage = useMemo(() => {
+    if (customerName.trim().length < 2) return "Enter the customer's full name (at least 2 characters).";
     if (phone.trim().length < 8) return "Enter a valid customer phone.";
     if (!emailOk(email)) return "Enter a valid customer email.";
     if (!/^\d+(\.\d{1,2})?$/.test(amount.trim())) {
@@ -129,6 +133,7 @@ export function CreatePlanForm() {
     }
     return validateScheduleBusinessRules(builtSchedule, amount.trim());
   }, [
+    customerName,
     phone,
     email,
     amount,
@@ -156,8 +161,10 @@ export function CreatePlanForm() {
           "Idempotency-Key": idempotencyKey,
         },
         body: JSON.stringify({
+          customerName: customerName.trim(),
           customerPhone: phone.trim(),
           customerEmail: email.trim(),
+          planName: planName.trim() || undefined,
           totalAmount: amount.trim(),
           paymentMethod: "card",
           schedule: builtSchedule,
@@ -189,6 +196,8 @@ export function CreatePlanForm() {
     setCopied(false);
     setSubmitError(null);
     setIdempotencyKey(newIdempotencyKey());
+    setCustomerName("");
+    setPlanName("");
   }
 
   if (success) {
@@ -257,7 +266,38 @@ export function CreatePlanForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      {/* Plan Name */}
+      <div className="space-y-2">
+        <Label htmlFor="planName">
+          Plan Name / Description{" "}
+          <span className="text-xs font-normal text-muted-foreground">(optional but recommended)</span>
+        </Label>
+        <Input
+          id="planName"
+          placeholder='e.g. "Q2 School Fees" or "Q2 Rent Payment Plan"'
+          value={planName}
+          onChange={(e) => setPlanName(e.target.value)}
+          className="h-11"
+        />
+      </div>
+
       {/* Customer info */}
+      <div className="space-y-2">
+        <Label htmlFor="customerName">Customer Full Name</Label>
+        <Input
+          id="customerName"
+          required
+          placeholder='e.g. "John Chukwudi Okoro"'
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
+          className="h-11"
+          aria-invalid={customerName.length > 0 && customerName.trim().length < 2}
+        />
+        {customerName.length > 0 && customerName.trim().length < 2 && (
+          <p className="text-xs text-destructive">Minimum 2 characters.</p>
+        )}
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="phone">Customer phone</Label>

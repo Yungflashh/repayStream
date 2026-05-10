@@ -31,12 +31,35 @@ const steps = [
 ];
 
 const stats = [
-  { value: "100%", label: "Non-custodial", icon: Lock },
-  { value: "1",    label: "PSP Partner",   icon: Landmark },
-  { value: "3×",   label: "Smart retries", icon: RotateCcw },
-  { value: "60",   label: "Max instalments", icon: TrendingUp },
-  { value: "NGN",  label: "Nigerian Naira", icon: Globe },
-  { value: "24/7", label: "Automated",     icon: Clock },
+  { value: "100%",      label: "Non-custodial",   icon: Lock },
+  { value: "Paystack",  label: "Powered by",      icon: Landmark },
+  { value: "3×",        label: "Smart retries",   icon: RotateCcw },
+  { value: "60",        label: "Max instalments", icon: TrendingUp },
+  { value: "NGN",       label: "Nigerian Naira",  icon: Globe },
+  { value: "24/7",      label: "Automated",       icon: Clock },
+];
+
+const testimonials = [
+  {
+    name: "Chidi Okafor",
+    role: "School Bursar, Greenfield Academy",
+    body: "RepayStream made school fee collection completely stress-free. Parents authorize once and payments come in automatically every month. We've reduced our collection backlog by over 80%.",
+  },
+  {
+    name: "Amaka Eze",
+    role: "Cooperative Treasurer, Lagos Civil Servants COOP",
+    body: "We used to chase members for monthly contributions. Now with RepayStream, debits run on schedule and we get a full audit trail. It's exactly what a cooperative needs.",
+  },
+  {
+    name: "Tunde Adeyemi",
+    role: "CEO, SwiftFurnish SME",
+    body: "Our customers now pay for appliances in installments without us worrying about follow-ups. The mandate system gives both sides confidence that everything is above board.",
+  },
+  {
+    name: "Ngozi Anyanwu",
+    role: "Operations Manager, RentEasy Nigeria",
+    body: "Collecting rent used to be our biggest headache. RepayStream's automated schedule and smart retries mean we almost never have to make a single phone call anymore.",
+  },
 ];
 
 const useCases = [
@@ -114,7 +137,7 @@ export function HomePage() {
               transition={{ ...smooth, duration: 0.7 }}
               className="mt-8 text-balance text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
             >
-              Repayment orchestration,{" "}
+              Automated repayment orchestration for businesses,{" "}
               <span className="text-primary">without holding funds</span>
             </motion.h1>
 
@@ -330,6 +353,95 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ── About / Product Description ── */}
+      <section className="border-b border-border bg-muted/40">
+        <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="mx-auto max-w-3xl"
+          >
+            <motion.div variants={blurInUp} transition={smooth} className="mb-8 text-center">
+              <span className="text-xs font-bold uppercase tracking-widest text-accent">About RepayStream</span>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                What we do
+              </h2>
+            </motion.div>
+            <motion.div variants={fadeInUp} transition={{ ...smooth, delay: 0.1 }} className="rounded-2xl border border-border bg-card p-8 shadow-sm space-y-4 text-muted-foreground leading-relaxed">
+              <p>
+                RepayStream is a <span className="font-semibold text-foreground">consent-based repayment orchestration platform</span>. We help businesses and their customers manage pre-agreed repayment schedules using licensed Nigerian payment providers (Paystack and others).
+              </p>
+              <p>
+                We do not lend money, hold customer funds, or perform collections. Our role is strictly limited to:
+              </p>
+              <ul className="space-y-2 pl-4">
+                {[
+                  "Capturing explicit customer consent",
+                  "Scheduling and triggering authorized debits through licensed PSPs",
+                  "Providing transparent visibility and status updates to all parties",
+                  "All funds move directly from the payer to the payee",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ── */}
+      <section className="border-b border-border bg-background">
+        <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={blurInUp}
+            transition={smooth}
+            className="text-center"
+          >
+            <span className="text-xs font-bold uppercase tracking-widest text-accent">Testimonials</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              Trusted by businesses across Nigeria
+            </h2>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-40px" }}
+            variants={staggerSlow}
+            className="mt-16 grid gap-6 sm:grid-cols-2"
+          >
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={t.name}
+                variants={fadeInUp}
+                transition={{ ...smooth, delay: i * 0.07 }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 shadow-sm"
+              >
+                <p className="text-sm leading-relaxed text-muted-foreground">&#8220;{t.body}&#8221;</p>
+                <div className="mt-auto flex items-center gap-3 border-t border-border/40 pt-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── Compliance ── */}
       <section className="border-b border-border bg-muted/40">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
@@ -404,21 +516,36 @@ export function HomePage() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ ...smooth, duration: 0.6 }}
-        className="bg-muted/50"
+        className="bg-muted/50 border-t border-border/30"
       >
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden">
                 <img src={mainLogo} alt="" className="h-full w-full object-contain" style={{ transform: "scale(3)" }} />
               </div>
-              <span className="text-sm font-bold text-foreground">RepayStream Technologies Limited</span>
+              <div>
+                <p className="text-sm font-bold text-foreground">RepayStream Technologies Limited</p>
+                <p className="text-xs text-muted-foreground">RC 9344129 &middot; CBN Direct Debit Scheme</p>
+              </div>
             </div>
-            <div className="flex flex-col items-center gap-1 sm:items-end">
-              <p className="text-xs text-muted-foreground">CBN Direct Debit Scheme Protected</p>
-              <p className="text-xs text-muted-foreground">RepayStream does not hold customer funds</p>
-            </div>
+            <nav className="flex flex-wrap gap-x-5 gap-y-1">
+              {[
+                { to: "/terms",          label: "Terms of Use" },
+                { to: "/privacy",        label: "Privacy Policy" },
+                { to: "/acceptable-use", label: "Acceptable Use" },
+                { to: "/compliance",     label: "Compliance" },
+                { to: "/contact",        label: "Contact Us" },
+              ].map((l) => (
+                <Link key={l.to} to={l.to} className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
           </div>
+          <p className="mt-6 text-xs text-muted-foreground/60">
+            &copy; 2026 RepayStream. RepayStream does not hold customer funds.
+          </p>
         </div>
       </motion.footer>
 

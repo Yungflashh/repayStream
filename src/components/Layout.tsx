@@ -65,18 +65,39 @@ export function Layout({ children, showBack, backTo = "/", backLabel = "Back", m
         </motion.main>
       </AnimatePresence>
 
-      <footer className="border-t border-border/30">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-6 sm:flex-row sm:justify-between sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden">
-              <img src={mainLogo} alt="" className="h-full w-full object-contain" style={{ transform: 'scale(3)' }} />
+      <footer className="border-t border-border/30 bg-muted/30">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden">
+                <img src={mainLogo} alt="" className="h-full w-full object-contain" style={{ transform: 'scale(3)' }} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground">RepayStream Technologies Limited</p>
+                <p className="text-xs text-muted-foreground/60">RC 9344129 &middot; CBN Direct Debit Scheme</p>
+              </div>
             </div>
-            <span className="text-sm font-bold text-foreground">RepayStream Technologies Limited</span>
+            <nav className="flex flex-wrap gap-x-5 gap-y-1">
+              {[
+                { to: "/terms",          label: "Terms of Use" },
+                { to: "/privacy",        label: "Privacy Policy" },
+                { to: "/acceptable-use", label: "Acceptable Use" },
+                { to: "/compliance",     label: "Compliance" },
+                { to: "/contact",        label: "Contact Us" },
+              ].map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  className="text-xs text-muted-foreground/70 transition-colors hover:text-foreground"
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
           </div>
-          <div className="flex flex-col items-center gap-1 sm:items-end">
-            <p className="text-xs text-muted-foreground/60">CBN Direct Debit Scheme Protected</p>
-            <p className="text-xs text-muted-foreground/60">RepayStream does not hold customer funds</p>
-          </div>
+          <p className="mt-6 text-xs text-muted-foreground/50">
+            &copy; 2026 RepayStream. RepayStream does not hold customer funds.
+          </p>
         </div>
       </footer>
     </div>

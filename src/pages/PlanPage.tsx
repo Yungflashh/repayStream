@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CalendarRange, FileText, CreditCard, Phone, Hash, AlertCircle, CheckCircle2, Loader2, Clock } from "lucide-react";
+import { CalendarRange, FileText, CreditCard, Phone, Hash, AlertCircle, CheckCircle2, Loader2, Clock, User, Building2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { MandateConsent } from "@/components/mandate-consent";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { apiFetch } from "@/lib/api";
 import { parseScheduleJsonForDisplay } from "@/lib/utils/schedule";
 import { staggerContainer, staggerItem, fadeInUp, smooth } from "@/lib/motion";
 
-type PlanPayload = { id: string; total_amount: string | number; status: string; schedule_json: unknown; payment_method: "card" | "bank"; customers: { phone?: string | null; email?: string | null } | null };
+type PlanPayload = { id: string; plan_name?: string | null; business_name?: string | null; total_amount: string | number; status: string; schedule_json: unknown; payment_method: "card" | "bank"; customers: { name?: string | null; phone?: string | null; email?: string | null } | null };
 type VerifyResult = { planStatus: string; paymentStatus: string };
 
 export function PlanPage() {
@@ -99,12 +99,48 @@ export function PlanPage() {
 
   const scheduleRows = parseScheduleJsonForDisplay(plan.schedule_json, plan.total_amount);
   const total = Number(plan.total_amount);
+  const installmentCount = scheduleRows.length;
 
   return (
     <Layout maxWidth="2xl" showBack backLabel="Home">
       <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="flex flex-col gap-6">
         <motion.div variants={staggerItem} transition={smooth} className="text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">Public consent page</span>
+        </motion.div>
+
+        {/* Plan / Customer identity header */}
+        <motion.div variants={staggerItem} transition={smooth}>
+          <Card className="border-primary/20 bg-primary/3">
+            <CardContent className="py-6">
+              <div className="flex flex-col gap-3">
+                {plan.customers?.name && (
+                  <div className="flex items-center gap-2">
+                    <User className="h-5 w-5 shrink-0 text-primary" />
+                    <span className="text-xl font-bold text-foreground">{plan.customers.name}</span>
+                  </div>
+                )}
+                <div className="flex flex-col gap-1">
+                  {(plan.plan_name || plan.business_name) && (
+                    <p className="text-base font-medium text-foreground">
+                      {plan.plan_name
+                        ? `${plan.plan_name}${plan.business_name ? ` for "${plan.business_name}"` : ""}`
+                        : plan.business_name}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    &#8358;{total.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {installmentCount > 1 ? ` (${installmentCount} installments)` : ""}
+                  </p>
+                </div>
+                {!plan.customers?.name && !plan.plan_name && !plan.business_name && (
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Repayment plan</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Payment status banner */}
