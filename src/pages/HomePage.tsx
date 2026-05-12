@@ -84,8 +84,8 @@ export function HomePage() {
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden">
-              <img src={mainLogo} alt="" className="h-full w-full object-contain" style={{ transform: "scale(3)" }} />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden">
+              <img src={mainLogo} alt="" className="h-full w-full object-contain" style={{ transform: "scale(2)" }} />
             </div>
             <span className="text-base font-bold tracking-tight text-foreground">
               <span className="hidden sm:inline">RepayStream Technologies Limited</span>
@@ -521,8 +521,8 @@ export function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden">
-                <img src={mainLogo} alt="" className="h-full w-full object-contain" style={{ transform: "scale(3)" }} />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden">
+                <img src={mainLogo} alt="" className="h-full w-full object-contain" style={{ transform: "scale(2)" }} />
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground">RepayStream Technologies Limited</p>

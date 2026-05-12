@@ -108,36 +108,33 @@ export function PlanPage() {
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">Public consent page</span>
         </motion.div>
 
-        {/* Plan / Customer identity header */}
+        {/* Plan / Customer / Business identity — always shown before authorization */}
         <motion.div variants={staggerItem} transition={smooth}>
-          <Card className="border-primary/20 bg-primary/3">
+          <Card className="border-primary/30 bg-primary/5">
             <CardContent className="py-6">
-              <div className="flex flex-col gap-3">
-                {plan.customers?.name && (
-                  <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 shrink-0 text-primary" />
-                    <span className="text-xl font-bold text-foreground">{plan.customers.name}</span>
-                  </div>
-                )}
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div className="flex flex-col gap-1">
-                  {(plan.plan_name || plan.business_name) && (
-                    <p className="text-base font-medium text-foreground">
-                      {plan.plan_name
-                        ? `${plan.plan_name}${plan.business_name ? ` for "${plan.business_name}"` : ""}`
-                        : plan.business_name}
-                    </p>
-                  )}
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Customer</p>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 shrink-0 text-primary" />
+                    <p className="font-bold text-foreground">{plan.customers?.name ?? "—"}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Plan</p>
+                  <p className="font-semibold text-foreground">{plan.plan_name ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground">
                     &#8358;{total.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    {installmentCount > 1 ? ` (${installmentCount} installments)` : ""}
+                    {installmentCount > 1 ? ` · ${installmentCount} installments` : ""}
                   </p>
                 </div>
-                {!plan.customers?.name && !plan.plan_name && !plan.business_name && (
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Business</p>
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Repayment plan</span>
+                    <Building2 className="h-4 w-4 shrink-0 text-accent" />
+                    <p className="font-semibold text-foreground">{plan.business_name ?? "—"}</p>
                   </div>
-                )}
+                </div>
               </div>
             </CardContent>
           </Card>

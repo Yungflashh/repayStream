@@ -136,27 +136,42 @@ export function DashboardPage() {
                       {plans.map((p) => {
                         const st = statusStyles[p.status] ?? statusStyles.pending_mandate;
                         const Icon = st.icon;
+                        const customerDisplay = p.customers?.name ?? p.customers?.email ?? p.customers?.phone ?? "Unknown customer";
                         return (
                           <motion.li key={p.id} variants={staggerItem} transition={smooth} whileHover={{ scale: 1.005 }}
                             className="flex flex-col gap-4 rounded-xl border border-border/40 bg-card/30 p-5 transition-all hover:border-border/60 hover:bg-card/50 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0 space-y-1.5">
-                              <p className="truncate font-semibold text-foreground">
-                                {p.customers?.name ?? p.customers?.email ?? p.customers?.phone ?? "Unknown customer"}
+
+                              {/* Customer name */}
+                              <p className="truncate font-bold text-foreground text-base">{customerDisplay}</p>
+
+                              {/* Plan name — always shown */}
+                              <p className={`truncate text-sm ${p.plan_name ? "font-medium text-foreground" : "italic text-muted-foreground/40"}`}>
+                                {p.plan_name ?? "No plan name"}
                               </p>
-                              {p.plan_name && (
-                                <p className="truncate text-sm text-muted-foreground">{p.plan_name}</p>
-                              )}
+
+                              {/* Business name — always full, always visible */}
+                              <div className="flex items-center gap-1.5">
+                                <Building2 className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                <p className="text-sm font-medium text-accent">{business.name}</p>
+                              </div>
+
+                              {/* Amount + status */}
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="text-lg font-bold tabular-nums">&#8358;{Number(p.total_amount).toLocaleString("en-NG")}</p>
                                 <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${st.color}`}>
                                   <Icon className="h-3 w-3" />{p.status.replace(/_/g, " ")}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+
+                              {/* Contact + payment method */}
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                 {p.customers?.phone && <span>{p.customers.phone}</span>}
-                                <span className="flex items-center gap-1"><CreditCard className="h-3.5 w-3.5" /> Paystack</span>
+                                {p.customers?.email && <span>{p.customers.email}</span>}
+                                <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Paystack</span>
                               </div>
                             </div>
+
                             <div className="flex shrink-0 flex-col gap-2 sm:items-end">
                               <Button size="sm" asChild><Link to={`/dashboard/plan/${p.id}`}><Eye className="h-3.5 w-3.5" />View details</Link></Button>
                               <div className="flex gap-2">

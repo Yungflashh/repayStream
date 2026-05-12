@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Shield, RotateCcw, CreditCard, Building2, HelpCircle, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Shield, RotateCcw, CreditCard, Building2, HelpCircle, CheckCircle2, FastForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const steps = [
@@ -79,15 +79,27 @@ export function MandateEducation({ onComplete }: { onComplete: () => void }) {
         </motion.div>
       </AnimatePresence>
 
+      {/* Skip — prominent, above nav */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onComplete}
+        className="w-full gap-2 border-dashed border-accent/50 text-accent hover:border-accent hover:bg-accent/5 hover:text-accent"
+      >
+        <FastForward className="h-4 w-4" />
+        Skip education and proceed to authorization
+      </Button>
+
       {/* Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           disabled={currentStep === 0}
           onClick={() => setCurrentStep((s) => s - 1)}
-          className="text-muted-foreground"
+          className="gap-1"
         >
+          <ChevronLeft className="h-4 w-4" />
           Previous
         </Button>
 
@@ -101,13 +113,6 @@ export function MandateEducation({ onComplete }: { onComplete: () => void }) {
             Next <ChevronRight className="h-4 w-4" />
           </Button>
         )}
-      </div>
-
-      {/* Skip option */}
-      <div className="text-center">
-        <button type="button" onClick={onComplete} className="text-xs text-muted-foreground/50 underline-offset-4 hover:text-muted-foreground hover:underline">
-          Skip education and proceed
-        </button>
       </div>
     </div>
   );

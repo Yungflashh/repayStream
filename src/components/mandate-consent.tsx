@@ -5,7 +5,6 @@ import { CreditCard, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { MandateEducation } from "@/components/mandate-education";
 import { apiFetch } from "@/lib/api";
 
@@ -136,15 +135,13 @@ export function MandateConsent({ plan }: { plan: PlanSummary }) {
                     <Checkbox
                       id={item.id}
                       checked={item.checked}
-                      onCheckedChange={(v) => item.onChange(v === true)}
                       className="mt-0.5 shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                      onCheckedChange={(v) => item.onChange(v === true)}
                     />
-                    <Label
-                      htmlFor={item.id}
-                      className="cursor-pointer text-sm font-normal leading-relaxed"
-                    >
+                    <span className="text-sm font-normal leading-relaxed text-foreground/80 select-none">
                       {item.label}
-                    </Label>
+                    </span>
                   </motion.div>
                 ))}
               </div>
