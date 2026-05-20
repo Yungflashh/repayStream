@@ -10,7 +10,7 @@ import { apiFetch } from "@/lib/api";
 import { parseScheduleJsonForDisplay } from "@/lib/utils/schedule";
 import { staggerContainer, staggerItem, fadeInUp, smooth } from "@/lib/motion";
 
-type PlanPayload = { id: string; plan_name?: string | null; business_name?: string | null; total_amount: string | number; status: string; schedule_json: unknown; payment_method: "card" | "bank"; customers: { name?: string | null; phone?: string | null; email?: string | null } | null };
+type PlanPayload = { id: string; plan_name?: string | null; business_name?: string | null; total_amount: string | number; status: string; schedule_json: unknown; payment_method: "card" | "bank"; customer_id?: string; customers: { name?: string | null; phone?: string | null; email?: string | null } | null };
 type VerifyResult = { planStatus: string; paymentStatus: string };
 
 export function PlanPage() {
@@ -162,6 +162,19 @@ export function PlanPage() {
                     <p className="font-semibold text-primary">Payment confirmed</p>
                     <p className="text-sm text-muted-foreground">Your mandate has been authorised. Scheduled debits will begin as per the plan below.</p>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+            {verified?.paymentStatus === "success" && plan.customer_id && (
+              <Card className="border-accent/30 bg-accent/5">
+                <CardContent className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-semibold text-foreground">Track your repayments</p>
+                    <p className="text-sm text-muted-foreground">Sign up or log in with the same email to view your schedule and payment history in your portal.</p>
+                  </div>
+                  <Button asChild variant="outline" className="shrink-0">
+                    <Link to={`/portal/claim?customerId=${plan.customer_id}`}>Open my portal</Link>
+                  </Button>
                 </CardContent>
               </Card>
             )}

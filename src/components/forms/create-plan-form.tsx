@@ -38,6 +38,7 @@ export function CreatePlanForm() {
 
   const [customerName, setCustomerName] = useState("");
   const [planName, setPlanName] = useState("");
+  const [group, setGroup] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
@@ -57,9 +58,11 @@ export function CreatePlanForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
     planId: string;
+    customerId: string;
     idempotentReplay: boolean;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedClaim, setCopiedClaim] = useState(false);
 
   const minDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -165,6 +168,7 @@ export function CreatePlanForm() {
           customerPhone: phone.trim(),
           customerEmail: email.trim(),
           planName: planName.trim() || undefined,
+          group: group.trim() || undefined,
           totalAmount: amount.trim(),
           paymentMethod: "card",
           schedule: builtSchedule,
@@ -174,6 +178,7 @@ export function CreatePlanForm() {
       if (!res.ok) throw new Error(data.error ?? "Failed to create plan");
       setSuccess({
         planId: data.plan.id as string,
+        customerId: data.plan.customerId as string,
         idempotentReplay: Boolean(data.idempotentReplay),
       });
     } catch (err: unknown) {
@@ -191,13 +196,23 @@ export function CreatePlanForm() {
     window.setTimeout(() => setCopied(false), 2000);
   }
 
+  async function copyClaimLink() {
+    if (!success) return;
+    const url = `${window.location.origin}/portal/claim?customerId=${success.customerId}`;
+    await navigator.clipboard.writeText(url);
+    setCopiedClaim(true);
+    window.setTimeout(() => setCopiedClaim(false), 2000);
+  }
+
   function resetForAnother() {
     setSuccess(null);
     setCopied(false);
+    setCopiedClaim(false);
     setSubmitError(null);
     setIdempotencyKey(newIdempotencyKey());
     setCustomerName("");
     setPlanName("");
+    setGroup("");
   }
 
   if (success) {
@@ -205,6 +220,10 @@ export function CreatePlanForm() {
       typeof window !== "undefined"
         ? `${window.location.origin}/plan/${success.planId}`
         : `/plan/${success.planId}`;
+    const claimUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/portal/claim?customerId=${success.customerId}`
+        : `/portal/claim?customerId=${success.customerId}`;
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -227,8 +246,10 @@ export function CreatePlanForm() {
             )}
           </div>
         </div>
+
+        {/* Mandate link */}
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Share link</Label>
+          <Label className="text-xs font-semibold text-muted-foreground">1. Mandate link — send to customer to authorize</Label>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <code className="flex-1 break-all rounded-xl border border-border/40 bg-background px-4 py-2.5 text-xs font-medium text-foreground">
               {shareUrl}
@@ -240,19 +261,37 @@ export function CreatePlanForm() {
               onClick={() => void copyLink()}
             >
               {copied ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Copied!
-                </>
+                <><Check className="h-4 w-4" />Copied!</>
               ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copy link
-                </>
+                <><Copy className="h-4 w-4" />Copy</>
               )}
             </Button>
           </div>
         </div>
+
+        {/* Claim / portal link */}
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold text-muted-foreground">2. Portal link — send after mandate is authorized</Label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <code className="flex-1 break-all rounded-xl border border-border/40 bg-background px-4 py-2.5 text-xs font-medium text-foreground">
+              {claimUrl}
+            </code>
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0"
+              onClick={() => void copyClaimLink()}
+            >
+              {copiedClaim ? (
+                <><Check className="h-4 w-4" />Copied!</>
+              ) : (
+                <><Copy className="h-4 w-4" />Copy</>
+              )}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground/70">Customer signs up or logs in with the same email used on this plan, then claims their portal.</p>
+        </div>
+
         <Button
           type="button"
           variant="secondary"
@@ -279,6 +318,22 @@ export function CreatePlanForm() {
           onChange={(e) => setPlanName(e.target.value)}
           className="h-11"
         />
+      </div>
+
+      {/* Group / Batch */}
+      <div className="space-y-2">
+        <Label htmlFor="group">
+          Group / Batch{" "}
+          <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
+          id="group"
+          placeholder='e.g. "Stepfield Term 1" or "Bontec Business Plans"'
+          value={group}
+          onChange={(e) => setGroup(e.target.value)}
+          className="h-11"
+        />
+        <p className="text-xs text-muted-foreground">Group related plans together for easy filtering on your dashboard.</p>
       </div>
 
       {/* Customer info */}

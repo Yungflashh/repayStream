@@ -14,7 +14,7 @@ type Attempt = { id: string; attempt_number: number; amount: number; status: str
 
 type PortalData = {
   customer: { id: string; phone: string; email?: string };
-  plans: { id: string; total_amount: number; status: string; payment_method?: string; schedule_json?: unknown; created_at?: string; attempts?: Attempt[] }[];
+  plans: { id: string; plan_name?: string | null; total_amount: number; status: string; payment_method?: string; schedule_json?: unknown; created_at?: string; attempts?: Attempt[] }[];
 };
 
 const statusStyles: Record<string, string> = {
@@ -101,6 +101,9 @@ export function CustomerPortalPage() {
                           className="flex w-full items-center gap-4 p-5 text-left"
                         >
                           <div className="min-w-0 flex-1 space-y-1.5">
+                            {p.plan_name && (
+                              <p className="truncate text-sm font-semibold text-foreground">{p.plan_name}</p>
+                            )}
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="text-lg font-bold tabular-nums">&#8358;{Number(p.total_amount).toLocaleString("en-NG")}</p>
                               <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[p.status] ?? "bg-secondary text-secondary-foreground"}`}>
