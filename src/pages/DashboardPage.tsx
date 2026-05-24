@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, clearToken } from "@/lib/api";
 import { staggerContainer, staggerItem, smooth } from "@/lib/motion";
 
 type Business = { id: string; name: string };
@@ -88,7 +88,7 @@ export function DashboardPage() {
     return () => { cancelled = true; };
   }, []);
 
-  async function signOut() { await apiFetch("/api/auth/logout", { method: "POST" }); window.location.href = "/"; }
+  async function signOut() { await apiFetch("/api/auth/logout", { method: "POST" }); clearToken(); window.location.href = "/"; }
 
   const allGroups = useMemo(() => {
     const groups = new Set<string>();

@@ -6,7 +6,7 @@ import { Layout } from "@/components/Layout";
 import { DisputeChat } from "@/components/dispute-chat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, clearToken } from "@/lib/api";
 import { parseScheduleJsonForDisplay } from "@/lib/utils/schedule";
 import { staggerContainer, staggerItem, smooth } from "@/lib/motion";
 
@@ -47,7 +47,7 @@ export function CustomerPortalPage() {
     return () => { cancelled = true; };
   }, [id]);
 
-  async function signOut() { await apiFetch("/api/auth/logout", { method: "POST" }); window.location.href = "/"; }
+  async function signOut() { await apiFetch("/api/auth/logout", { method: "POST" }); clearToken(); window.location.href = "/"; }
 
   if (data === undefined) {
     return <Layout maxWidth="xl" centered><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></Layout>;

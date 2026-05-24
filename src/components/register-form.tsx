@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, setToken } from "@/lib/api";
 
 export function RegisterForm() {
   const navigate = useNavigate();
@@ -26,8 +26,9 @@ export function RegisterForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as { error?: string; token?: string };
       if (!res.ok) throw new Error(data.error ?? "Registration failed");
+      if (data.token) setToken(data.token);
       navigate(nextPath.startsWith("/") ? nextPath : "/dashboard", { replace: true });
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Something went wrong.");
