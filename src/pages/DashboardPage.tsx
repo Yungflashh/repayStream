@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LayoutDashboard, LogOut, Settings, ExternalLink, UserCheck, CreditCard, Building2, FileText, Plus, TrendingUp, Clock, CheckCircle2, MessageSquare, Eye, Search, Tag, X, Wallet } from "lucide-react";
+import {
+  Check, Copy, LayoutDashboard, LogOut, Settings, ExternalLink, UserCheck,
+  CreditCard, Building2, FileText, Plus, TrendingUp, Clock, CheckCircle2,
+  MessageSquare, Eye, Search, Tag, X, Wallet, PauseCircle, XCircle,
+} from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { BusinessSetupForm } from "@/components/business-setup-form";
 import { CreatePlanForm } from "@/components/forms/create-plan-form";
@@ -31,6 +35,8 @@ const statusStyles: Record<string, { color: string; icon: typeof Clock }> = {
   active: { color: "text-primary bg-primary/10", icon: TrendingUp },
   completed: { color: "text-blue-400 bg-blue-400/10", icon: CheckCircle2 },
   defaulted: { color: "text-destructive bg-destructive/10", icon: Clock },
+  paused: { color: "text-amber-500 bg-amber-500/10", icon: PauseCircle },
+  cancelled: { color: "text-muted-foreground bg-secondary/30", icon: XCircle },
 };
 
 function formatDate(iso: string): string {
@@ -71,6 +77,13 @@ export function DashboardPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState("");
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
+  // Tracks which link was just copied: "<planId>-mandate" | "<planId>-claim"
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const loadPlans = useCallback(async () => {
+    const pRes = await apiFetch("/api/plans");
+    if (pRes.ok) { const p = (await pRes.json()) as { plans: PlanRow[] }; setPlans(p.plans ?? []); }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,6 +102,16 @@ export function DashboardPage() {
   }, []);
 
   async function signOut() { await apiFetch("/api/auth/logout", { method: "POST" }); clearToken(); window.location.href = "/"; }
+
+  async function copyLink(planId: string, type: "mandate" | "claim", customerId: string) {
+    const url = type === "mandate"
+      ? `${window.location.origin}/plan/${planId}`
+      : `${window.location.origin}/portal/claim?customerId=${customerId}`;
+    await navigator.clipboard.writeText(url);
+    const key = `${planId}-${type}`;
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 2000);
+  }
 
   const allGroups = useMemo(() => {
     const groups = new Set<string>();
@@ -146,7 +169,6 @@ export function DashboardPage() {
 
         {!business ? (
           <motion.div variants={staggerItem} transition={smooth} className="flex flex-col gap-4">
-            {/* Customer portal shortcut — shown when this account has a claimed portal */}
             {myCustomer && (
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
@@ -166,7 +188,6 @@ export function DashboardPage() {
               </Card>
             )}
 
-            {/* Business setup */}
             <Card>
               <CardHeader>
                 <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10"><Building2 className="h-6 w-6 text-primary" /></div>
@@ -224,7 +245,7 @@ export function DashboardPage() {
                   </DialogTitle>
                   <DialogDescription>Set up a new repayment schedule for your customer</DialogDescription>
                 </DialogHeader>
-                <CreatePlanForm />
+                <CreatePlanForm onCreated={() => void loadPlans()} />
               </DialogContent>
             </Dialog>
 
@@ -242,7 +263,6 @@ export function DashboardPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
 
-                  {/* Search + group filter */}
                   {plans.length > 0 && (
                     <div className="space-y-3">
                       <div className="relative">
@@ -315,6 +335,8 @@ export function DashboardPage() {
                               const st = statusStyles[p.status] ?? statusStyles.pending_mandate;
                               const Icon = st.icon;
                               const customerDisplay = p.customers?.name ?? p.customers?.email ?? p.customers?.phone ?? "Unknown customer";
+                              const mandateKey = `${p.id}-mandate`;
+                              const claimKey = `${p.id}-claim`;
                               return (
                                 <motion.li key={p.id} variants={staggerItem} transition={smooth} whileHover={{ scale: 1.005 }}
                                   className="flex flex-col gap-4 rounded-xl border border-border/40 bg-card/30 p-4 transition-all hover:border-border/60 hover:bg-card/50 sm:p-5">
@@ -355,12 +377,32 @@ export function DashboardPage() {
                                         <Link to={`/dashboard/plan/${p.id}`}><Eye className="h-3.5 w-3.5" />View details</Link>
                                       </Button>
                                       <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" className="flex-1 sm:flex-none" asChild>
-                                          <Link to={`/plan/${p.id}`} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" />Mandate</Link>
-                                        </Button>
-                                        <Button size="sm" variant="outline" className="flex-1 sm:flex-none" asChild>
-                                          <Link to={`/portal/claim?customerId=${p.customer_id}`} target="_blank" rel="noreferrer"><UserCheck className="h-3.5 w-3.5" />Claim</Link>
-                                        </Button>
+                                        {/* Mandate: open + copy */}
+                                        <div className="flex gap-0.5">
+                                          <Button size="sm" variant="outline" className="rounded-r-none" asChild>
+                                            <Link to={`/plan/${p.id}`} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" />Mandate</Link>
+                                          </Button>
+                                          <Button
+                                            size="sm" variant="outline" className="rounded-l-none border-l-0 px-2"
+                                            title="Copy mandate link"
+                                            onClick={() => void copyLink(p.id, "mandate", p.customer_id)}
+                                          >
+                                            {copiedKey === mandateKey ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                                          </Button>
+                                        </div>
+                                        {/* Claim: open + copy */}
+                                        <div className="flex gap-0.5">
+                                          <Button size="sm" variant="outline" className="rounded-r-none" asChild>
+                                            <Link to={`/portal/claim?customerId=${p.customer_id}`} target="_blank" rel="noreferrer"><UserCheck className="h-3.5 w-3.5" />Claim</Link>
+                                          </Button>
+                                          <Button
+                                            size="sm" variant="outline" className="rounded-l-none border-l-0 px-2"
+                                            title="Copy claim link"
+                                            onClick={() => void copyLink(p.id, "claim", p.customer_id)}
+                                          >
+                                            {copiedKey === claimKey ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                                          </Button>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>

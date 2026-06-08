@@ -57,7 +57,12 @@ export function RegisterForm() {
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link to="/login" className="font-medium text-primary hover:underline underline-offset-4">Sign in</Link>
+        <Link
+          to={nextPath !== "/dashboard" ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"}
+          className="font-medium text-primary hover:underline underline-offset-4"
+        >
+          Sign in
+        </Link>
       </p>
     </form>
   );
