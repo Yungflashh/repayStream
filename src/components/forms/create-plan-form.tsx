@@ -9,8 +9,6 @@ import {
   Plus,
   Trash2,
   Sparkles,
-  ToggleLeft,
-  ToggleRight,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -435,69 +433,100 @@ export function CreatePlanForm({ onCreated }: { onCreated?: () => void }) {
 
       {/* Paystack fee estimator */}
       {builtSchedule && builtSchedule.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border/40 bg-secondary/10 p-5 space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Paystack fee handling</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Est. fee: 1.5% + ₦100, capped at ₦2,000 per installment
-              </p>
-            </div>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 rounded-2xl border border-border/40 bg-secondary/10 p-5">
+          {/* Header */}
+          <div>
+            <p className="text-sm font-semibold text-foreground">Paystack fee estimator</p>
+            <p className="text-xs text-muted-foreground mt-0.5">1.5% + ₦100 per installment, capped at ₦2,000</p>
+          </div>
+
+          {/* Segmented toggle */}
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-border/40 bg-background p-1">
             <button
               type="button"
-              onClick={() => setFeeStrategy((s) => s === "absorb" ? "pass_to_customer" : "absorb")}
-              className={cn("flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-colors", feeStrategy === "pass_to_customer" ? "border-primary/40 bg-primary/10 text-primary" : "border-border/40 bg-background text-muted-foreground hover:text-foreground")}
+              onClick={() => setFeeStrategy("absorb")}
+              className={cn(
+                "rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150",
+                feeStrategy === "absorb"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              {feeStrategy === "pass_to_customer"
-                ? <><ToggleRight className="h-4 w-4" />Pass to customer</>
-                : <><ToggleLeft className="h-4 w-4" />Absorb fee</>}
+              Absorb fee
+            </button>
+            <button
+              type="button"
+              onClick={() => setFeeStrategy("pass_to_customer")}
+              className={cn(
+                "rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150",
+                feeStrategy === "pass_to_customer"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Pass to customer
             </button>
           </div>
 
+          {/* Mode description */}
+          <p className="rounded-lg border border-border/20 bg-background/60 px-3 py-2 text-xs text-muted-foreground">
+            {feeStrategy === "absorb"
+              ? "You cover the Paystack fee. Customers pay exactly the installment amount."
+              : "Customers pay the Paystack fee on top of each installment."}
+          </p>
+
           {/* Fee breakdown table */}
           <div className="overflow-hidden rounded-xl border border-border/30 bg-background">
-            <div className="grid grid-cols-4 gap-2 border-b border-border/20 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="grid grid-cols-[2rem_1fr_1fr_1fr] border-b border-border/20 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               <span>#</span>
-              <span className="text-right">Original</span>
+              <span className="text-right">Amount</span>
               <span className="text-right">Est. fee</span>
               <span className="text-right">{feeStrategy === "pass_to_customer" ? "Customer pays" : "You receive"}</span>
             </div>
-            <ul className="divide-y divide-border/10 max-h-40 overflow-y-auto">
+
+            <ul className="max-h-48 divide-y divide-border/10 overflow-y-auto">
               {builtSchedule.slice(0, 12).map((row, i) => {
                 const fee = calcFee(row.amount);
-                const customerPays = feeStrategy === "pass_to_customer" ? row.amount + fee : row.amount;
-                const bizReceives = feeStrategy === "pass_to_customer" ? row.amount : row.amount - fee;
+                const outcome = feeStrategy === "pass_to_customer" ? row.amount + fee : row.amount - fee;
                 return (
-                  <li key={i} className="grid grid-cols-4 gap-2 px-3 py-2 text-xs">
+                  <li key={i} className={cn("grid grid-cols-[2rem_1fr_1fr_1fr] items-center px-4 py-2.5 text-xs", i % 2 === 1 && "bg-secondary/5")}>
                     <span className="font-mono text-muted-foreground">{i + 1}</span>
                     <span className="text-right font-mono">₦{row.amount.toLocaleString("en-NG", { minimumFractionDigits: 0 })}</span>
                     <span className="text-right font-mono text-amber-400">₦{fee.toLocaleString("en-NG", { minimumFractionDigits: 0 })}</span>
                     <span className={cn("text-right font-mono font-medium", feeStrategy === "pass_to_customer" ? "text-foreground" : "text-primary")}>
-                      ₦{(feeStrategy === "pass_to_customer" ? customerPays : bizReceives).toLocaleString("en-NG", { minimumFractionDigits: 0 })}
+                      ₦{outcome.toLocaleString("en-NG", { minimumFractionDigits: 0 })}
                     </span>
                   </li>
                 );
               })}
               {builtSchedule.length > 12 && (
-                <li className="px-3 py-2 text-center text-xs text-muted-foreground">+{builtSchedule.length - 12} more installments</li>
+                <li className="px-4 py-2.5 text-center text-xs italic text-muted-foreground">
+                  +{builtSchedule.length - 12} more installments not shown
+                </li>
               )}
             </ul>
-            <div className="grid grid-cols-4 gap-2 border-t border-border/20 bg-secondary/20 px-3 py-2 text-xs font-bold">
-              <span>Total</span>
-              <span className="text-right font-mono">₦{builtSchedule.reduce((s, r) => s + r.amount, 0).toLocaleString("en-NG", { minimumFractionDigits: 0 })}</span>
-              <span className="text-right font-mono text-amber-400">₦{builtSchedule.reduce((s, r) => s + calcFee(r.amount), 0).toLocaleString("en-NG", { minimumFractionDigits: 0 })}</span>
+
+            <div className="grid grid-cols-[2rem_1fr_1fr_1fr] items-center border-t border-border/20 bg-secondary/20 px-4 py-2.5 text-xs font-semibold">
+              <span className="text-muted-foreground">∑</span>
+              <span className="text-right font-mono">
+                ₦{builtSchedule.reduce((s, r) => s + r.amount, 0).toLocaleString("en-NG", { minimumFractionDigits: 0 })}
+              </span>
+              <span className="text-right font-mono text-amber-400">
+                ₦{builtSchedule.reduce((s, r) => s + calcFee(r.amount), 0).toLocaleString("en-NG", { minimumFractionDigits: 0 })}
+              </span>
               <span className={cn("text-right font-mono", feeStrategy === "pass_to_customer" ? "text-foreground" : "text-primary")}>
                 ₦{builtSchedule.reduce((s, r) => {
-                  const fee = calcFee(r.amount);
-                  return s + (feeStrategy === "pass_to_customer" ? r.amount + fee : r.amount - fee);
+                  const f = calcFee(r.amount);
+                  return s + (feeStrategy === "pass_to_customer" ? r.amount + f : r.amount - f);
                 }, 0).toLocaleString("en-NG", { minimumFractionDigits: 0 })}
               </span>
             </div>
           </div>
 
-          <p className="flex items-start gap-1.5 text-xs text-muted-foreground/70">
-            <Info className="h-3 w-3 mt-0.5 shrink-0" />
-            Fees are estimated. Final fees are determined by Paystack at the time of debit.
+          {/* Disclaimer */}
+          <p className="flex items-start gap-2 rounded-lg border border-border/20 bg-background/40 px-3 py-2.5 text-xs text-muted-foreground">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60" />
+            Fees shown are estimates based on Paystack's current pricing. Actual fees are charged by Paystack at the time of each transaction. RepayStream does not control or collect these fees.
           </p>
         </motion.div>
       )}
