@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -29,23 +29,23 @@
 
   /* ── Dark theme ── */
   .dark {
-    --background: 220 25% 7%;
-    --foreground: 210 20% 95%;
-    --card: 220 22% 10%;
-    --card-foreground: 210 20% 95%;
-    --primary: 155 100% 33%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 18% 14%;
-    --secondary-foreground: 210 15% 85%;
-    --muted: 220 18% 14%;
-    --muted-foreground: 215 15% 58%;
-    --accent: 175 65% 35%;
-    --accent-foreground: 175 80% 90%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 95%;
+    --primary: 155 90% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 155 80% 38%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 155 100% 33%;
+    --border: 0 0% 17%;
+    --input: 0 0% 17%;
+    --ring: 155 90% 36%;
     --radius: 0.75rem;
   }
 }
@@ -56,6 +56,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'DM Sans', system-ui, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   html {
@@ -66,4 +67,44 @@
   ::-webkit-scrollbar-track { @apply bg-muted; }
   ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
   ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
+}
+
+.rs-serif {
+  font-family: 'DM Serif Display', Georgia, serif;
+}
+
+.input-base {
+  @apply flex h-9 w-full rounded-lg border border-border/40 bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
+}
+
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }

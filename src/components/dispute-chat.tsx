@@ -1,68 +1,141 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Send, Loader2, Plus, ArrowLeft, CheckCircle2, Clock, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  MessageSquare, Send, Loader2, Plus, ArrowLeft,
+  CheckCircle2, Clock, AlertCircle, XCircle, X,
+} from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
-type Thread = { id: string; subject: string; status: string; category: string; created_at: string };
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type Thread = {
+  id: string;
+  subject: string;
+  status: string;
+  category: string;
+  plan_name?: string | null;
+  created_at: string;
+};
 type Message = { id: string; sender_type: string; body: string; created_at: string };
 
-const statusIcon: Record<string, typeof CheckCircle2> = {
-  open: AlertCircle,
-  in_progress: Clock,
-  resolved: CheckCircle2,
-  closed: CheckCircle2,
+// ── Status config ─────────────────────────────────────────────────────────────
+
+const STATUS_META: Record<string, {
+  icon: typeof CheckCircle2;
+  label: string;
+  color: string;
+  bg: string;
+  border: string;
+}> = {
+  open:        { icon: AlertCircle,  label: "Open",        color: "text-amber-500", bg: "bg-amber-400/10",  border: "border-amber-400/25" },
+  in_progress: { icon: Clock,        label: "In progress", color: "text-blue-400",  bg: "bg-blue-400/10",   border: "border-blue-400/25" },
+  resolved:    { icon: CheckCircle2, label: "Resolved",    color: "text-primary",   bg: "bg-primary/10",    border: "border-primary/20" },
+  closed:      { icon: XCircle,      label: "Closed",      color: "text-muted-foreground", bg: "bg-secondary/30", border: "border-border/30" },
 };
 
-const statusColor: Record<string, string> = {
-  open: "text-amber-400 bg-amber-400/10",
-  in_progress: "text-blue-400 bg-blue-400/10",
-  resolved: "text-primary bg-primary/10",
-  closed: "text-muted-foreground bg-secondary",
-};
+const CATEGORIES = [
+  { value: "general",            label: "General" },
+  { value: "payment_issue",      label: "Payment Issue" },
+  { value: "wrong_amount",       label: "Wrong Amount" },
+  { value: "unauthorized_debit", label: "Unauthorized Debit" },
+  { value: "refund_request",     label: "Refund Request" },
+];
 
-export function DisputeChat({ customerId, plans }: { customerId: string; plans: { id: string; total_amount: number }[] }) {
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [activeThread, setActiveThread] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMsg, setNewMsg] = useState("");
-  const [sending, setSending] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [newSubject, setNewSubject] = useState("");
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" });
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const meta = STATUS_META[status] ?? STATUS_META.open;
+  const Icon = meta.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${meta.bg} ${meta.border} ${meta.color}`}>
+      <Icon className="h-3 w-3" />
+      {meta.label}
+    </span>
+  );
+}
+
+function CategoryChip({ category }: { category: string }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-border/30 bg-secondary/30 px-2 py-0.5 text-[11px] text-muted-foreground capitalize">
+      {category.replace(/_/g, " ")}
+    </span>
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export function DisputeChat({
+  customerId,
+  plans,
+}: {
+  customerId: string;
+  plans: { id: string; plan_name?: string | null; total_amount: number }[];
+}) {
+  const [threads,     setThreads]     = useState<Thread[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [activeId,    setActiveId]    = useState<string | null>(null);
+  const [messages,    setMessages]    = useState<Message[]>([]);
+  const [msgsLoading, setMsgsLoading] = useState(false);
+  const [activeThread, setActiveThread] = useState<Thread | null>(null);
+  const [newMsg,      setNewMsg]      = useState("");
+  const [sending,     setSending]     = useState(false);
+  const [showCreate,  setShowCreate]  = useState(false);
+  const [creating,    setCreating]    = useState(false);
+
+  // Create form fields
+  const [newSubject,  setNewSubject]  = useState("");
   const [newCategory, setNewCategory] = useState("general");
-  const [newPlanId, setNewPlanId] = useState(plans[0]?.id ?? "");
-  const [newMessage, setNewMessage] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
+  const [newPlanId,   setNewPlanId]   = useState(plans[0]?.id ?? "");
+  const [newMessage,  setNewMessage]  = useState("");
+
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { loadThreads(); }, []);
+  useEffect(() => { void loadThreads(); }, []);
 
   async function loadThreads() {
-    const res = await apiFetch("/api/disputes");
-    if (res.ok) {
-      const data = (await res.json()) as { threads: Thread[] };
-      setThreads(data.threads);
+    setLoading(true);
+    try {
+      const res = await apiFetch("/api/disputes");
+      if (res.ok) {
+        const data = (await res.json()) as { threads: Thread[] };
+        setThreads(data.threads);
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
   async function openThread(threadId: string) {
-    setActiveThread(threadId);
-    const res = await apiFetch(`/api/disputes/${threadId}/messages`);
-    if (res.ok) {
-      const data = (await res.json()) as { messages: Message[] };
-      setMessages(data.messages);
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    const t = threads.find((x) => x.id === threadId) ?? null;
+    setActiveId(threadId);
+    setActiveThread(t);
+    setMessages([]);
+    setMsgsLoading(true);
+    try {
+      const res = await apiFetch(`/api/disputes/${threadId}/messages`);
+      if (res.ok) {
+        const data = (await res.json()) as {
+          thread?: Thread;
+          messages: Message[];
+        };
+        setMessages(data.messages);
+        if (data.thread) setActiveThread(data.thread);
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }
+    } finally {
+      setMsgsLoading(false);
     }
   }
 
   async function sendMessage() {
-    if (!newMsg.trim() || !activeThread) return;
+    if (!newMsg.trim() || !activeId) return;
     setSending(true);
     try {
-      const res = await apiFetch(`/api/disputes/${activeThread}/messages`, {
+      const res = await apiFetch(`/api/disputes/${activeId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body: newMsg.trim() }),
@@ -71,6 +144,8 @@ export function DisputeChat({ customerId, plans }: { customerId: string; plans: 
         const data = (await res.json()) as { message: Message };
         setMessages((m) => [...m, data.message]);
         setNewMsg("");
+        // Re-fetch thread status in case it was re-opened
+        void loadThreads();
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
     } finally {
@@ -85,169 +160,330 @@ export function DisputeChat({ customerId, plans }: { customerId: string; plans: 
       const res = await apiFetch("/api/disputes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: newPlanId, subject: newSubject, category: newCategory, message: newMessage }),
+        body: JSON.stringify({
+          planId: newPlanId,
+          subject: newSubject,
+          category: newCategory,
+          message: newMessage,
+        }),
       });
       if (res.ok) {
         const data = (await res.json()) as { thread: { id: string } };
         setShowCreate(false);
-        setNewSubject("");
-        setNewMessage("");
+        setNewSubject(""); setNewMessage(""); setNewCategory("general");
         await loadThreads();
-        openThread(data.thread.id);
+        void openThread(data.thread.id);
       }
     } finally {
       setCreating(false);
     }
   }
 
-  // Thread list view
-  if (!activeThread) {
+  const currentStatus = activeThread?.status ?? "open";
+  const isClosed   = currentStatus === "closed";
+  const isResolved = currentStatus === "resolved";
+  const isThreadDone = isClosed || isResolved;
+  const canSend = !isClosed; // resolved threads: sending will re-open per backend
+
+  // ── Thread list view ─────────────────────────────────────────────────────
+
+  if (!activeId) {
     return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/10">
-                <MessageSquare className="h-5 w-5 text-amber-400" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Disputes & Messages</CardTitle>
-                <CardDescription>Report issues or communicate with the business</CardDescription>
-              </div>
+      <div className="flex flex-col gap-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/10 border border-amber-400/20">
+              <MessageSquare className="h-5 w-5 text-amber-400" />
             </div>
-            <Button size="sm" onClick={() => setShowCreate(true)} className="gap-1">
-              <Plus className="h-4 w-4" /> New
-            </Button>
+            <div>
+              <p className="font-semibold text-foreground">Disputes & Messages</p>
+              <p className="text-xs text-muted-foreground">Report issues or communicate with the business</p>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <AnimatePresence>
-            {showCreate && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                <div className="space-y-3 rounded-xl border border-border/40 bg-secondary/20 p-4">
-                  <div className="space-y-2">
-                    <Label>Subject</Label>
-                    <Input placeholder="Brief description of the issue" value={newSubject} onChange={(e) => setNewSubject(e.target.value)} />
+
+          {!showCreate && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New dispute
+            </button>
+          )}
+        </div>
+
+        {/* Create form */}
+        <AnimatePresence>
+          {showCreate && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="rounded-2xl border border-border/40 bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">Open a dispute</h3>
+                  <button
+                    onClick={() => setShowCreate(false)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {/* Subject */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Subject</label>
+                    <input
+                      type="text"
+                      value={newSubject}
+                      onChange={(e) => setNewSubject(e.target.value)}
+                      placeholder="Brief description of the issue"
+                      className="flex h-10 w-full rounded-xl border border-border/40 bg-secondary/20 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    />
                   </div>
+
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Category</Label>
-                      <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="flex h-11 w-full rounded-xl border border-border bg-secondary/30 px-3 py-2 text-sm text-foreground">
-                        <option value="general">General</option>
-                        <option value="payment_issue">Payment Issue</option>
-                        <option value="wrong_amount">Wrong Amount</option>
-                        <option value="unauthorized_debit">Unauthorized Debit</option>
-                        <option value="refund_request">Refund Request</option>
+                    {/* Category */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Category</label>
+                      <select
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        className="flex h-10 w-full rounded-xl border border-border/40 bg-secondary/20 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      >
+                        {CATEGORIES.map((c) => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
                       </select>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Plan</Label>
-                      <select value={newPlanId} onChange={(e) => setNewPlanId(e.target.value)} className="flex h-11 w-full rounded-xl border border-border bg-secondary/30 px-3 py-2 text-sm text-foreground">
+
+                    {/* Plan */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Plan</label>
+                      <select
+                        value={newPlanId}
+                        onChange={(e) => setNewPlanId(e.target.value)}
+                        className="flex h-10 w-full rounded-xl border border-border/40 bg-secondary/20 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      >
                         {plans.map((p) => (
-                          <option key={p.id} value={p.id}>&#8358;{p.total_amount.toLocaleString("en-NG")} — {p.id.slice(-6)}</option>
+                          <option key={p.id} value={p.id}>
+                            {p.plan_name ?? `Plan …${p.id.slice(-6)}`} — ₦{p.total_amount.toLocaleString("en-NG")}
+                          </option>
                         ))}
                       </select>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Message</Label>
-                    <textarea value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Describe your issue in detail..." className="flex min-h-[100px] w-full rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30" />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button disabled={creating || !newSubject.trim() || !newMessage.trim()} onClick={() => void createThread()}>
-                      {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit dispute"}
-                    </Button>
-                    <Button variant="ghost" onClick={() => setShowCreate(false)}>Cancel</Button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
-          {threads.length === 0 && !showCreate && (
-            <div className="flex flex-col items-center py-8 text-center">
-              <MessageSquare className="mb-3 h-8 w-8 text-muted-foreground/20" />
-              <p className="text-sm text-muted-foreground">No disputes yet</p>
-            </div>
+                  {/* Message */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Message</label>
+                    <textarea
+                      rows={4}
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Describe your issue in detail…"
+                      className="flex w-full resize-none rounded-xl border border-border/40 bg-secondary/20 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    />
+                  </div>
+
+                  {/* Submit */}
+                  <button
+                    disabled={creating || !newSubject.trim() || !newMessage.trim() || !newPlanId}
+                    onClick={() => void createThread()}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit dispute"}
+                  </button>
+
+                  <button
+                    onClick={() => setShowCreate(false)}
+                    className="text-center text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          {threads.map((t) => {
-            const Icon = statusIcon[t.status] ?? AlertCircle;
-            return (
-              <motion.button
-                key={t.id}
-                whileHover={{ x: 4 }}
-                onClick={() => openThread(t.id)}
-                className="flex w-full items-center gap-3 rounded-xl border border-border/40 bg-secondary/10 p-4 text-left transition-colors hover:bg-secondary/20"
-              >
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${statusColor[t.status]}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{t.subject}</p>
-                  <p className="text-xs text-muted-foreground">{t.category.replace(/_/g, " ")} &middot; {t.status.replace(/_/g, " ")}</p>
-                </div>
-              </motion.button>
-            );
-          })}
-        </CardContent>
-      </Card>
+        {/* Thread list */}
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : threads.length === 0 && !showCreate ? (
+          <div className="flex flex-col items-center py-12 text-center">
+            <MessageSquare className="mb-3 h-8 w-8 text-muted-foreground/20" />
+            <p className="text-sm font-medium text-muted-foreground">No disputes yet</p>
+            <p className="mt-0.5 text-xs text-muted-foreground/60">Open a dispute to get help from the business</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {threads.map((t) => {
+              const meta = STATUS_META[t.status] ?? STATUS_META.open;
+              return (
+                <motion.button
+                  key={t.id}
+                  whileHover={{ x: 2 }}
+                  onClick={() => void openThread(t.id)}
+                  className="flex w-full items-start gap-3 rounded-xl border border-border/40 bg-secondary/10 p-4 text-left transition-colors hover:bg-secondary/20"
+                >
+                  <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${meta.bg} ${meta.border}`}>
+                    <meta.icon className={`h-4 w-4 ${meta.color}`} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{t.subject}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <StatusBadge status={t.status} />
+                      <CategoryChip category={t.category} />
+                      {t.plan_name && (
+                        <span className="text-[11px] text-muted-foreground/60">· {t.plan_name}</span>
+                      )}
+                    </div>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     );
   }
 
-  // Chat view
-  const thread = threads.find((t) => t.id === activeThread);
+  // ── Chat view ─────────────────────────────────────────────────────────────
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setActiveThread(null)} className="shrink-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="min-w-0 flex-1">
-            <CardTitle className="truncate text-base">{thread?.subject ?? "Thread"}</CardTitle>
-            <CardDescription>{thread?.category?.replace(/_/g, " ") ?? ""} &middot; {thread?.status?.replace(/_/g, " ")}</CardDescription>
+    <div className="flex flex-col gap-4">
+      {/* Chat header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => { setActiveId(null); setActiveThread(null); }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/40 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h3
+            className="truncate text-base font-bold text-foreground"
+            style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
+          >
+            {activeThread?.subject ?? "Dispute thread"}
+          </h3>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <StatusBadge status={currentStatus} />
+            {activeThread?.category && <CategoryChip category={activeThread.category} />}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border border-border/30 bg-background/50 p-4">
-          {messages.map((m) => (
-            <motion.div
-              key={m.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex ${m.sender_type === "customer" ? "justify-end" : "justify-start"}`}
-            >
-              <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-                m.sender_type === "customer"
-                  ? "bg-primary/15 text-foreground"
-                  : m.sender_type === "system"
-                    ? "bg-secondary/30 text-muted-foreground italic"
-                    : "bg-secondary text-foreground"
-              }`}>
-                <p className="mb-1 text-xs font-medium text-muted-foreground">{m.sender_type}</p>
-                <p className="leading-relaxed">{m.body}</p>
-              </div>
-            </motion.div>
-          ))}
+      </div>
+
+      {/* Status banner */}
+      {isResolved && (
+        <div className="flex items-center gap-2 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+          <p className="text-sm font-medium text-primary">This dispute has been resolved.</p>
+        </div>
+      )}
+      {isClosed && (
+        <div className="flex items-center gap-2 rounded-xl border border-border/30 bg-secondary/30 px-4 py-3">
+          <XCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <p className="text-sm font-medium text-muted-foreground">This thread is closed.</p>
+        </div>
+      )}
+
+      {/* Message area */}
+      <div className="overflow-hidden rounded-2xl border border-border/40 bg-card">
+        <div className="flex max-h-[420px] min-h-[260px] flex-col gap-3 overflow-y-auto p-4">
+          {msgsLoading ? (
+            <div className="flex flex-1 items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <AnimatePresence initial={false}>
+              {messages.map((m) => {
+                const isCustomer = m.sender_type === "customer";
+                const isBusiness = m.sender_type === "business";
+                const isSystem   = m.sender_type === "system";
+                return (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`flex ${isCustomer ? "justify-end" : isSystem ? "justify-center" : "justify-start"}`}
+                  >
+                    {isSystem ? (
+                      <div className="max-w-[85%] rounded-full border border-border/20 bg-secondary/20 px-4 py-1.5">
+                        <p className="text-center text-[11px] italic text-muted-foreground/60">{m.body}</p>
+                      </div>
+                    ) : (
+                      <div className={`max-w-[78%] rounded-2xl px-4 py-3 ${
+                        isCustomer
+                          ? "rounded-br-sm border border-primary/20 bg-primary/10"
+                          : "rounded-bl-sm border border-border/30 bg-secondary/30"
+                      }`}>
+                        <p className={`mb-1.5 text-[10px] font-bold uppercase tracking-widest ${
+                          isCustomer ? "text-primary/60" : "text-muted-foreground"
+                        }`}>
+                          {isCustomer ? "You" : "Business"}
+                        </p>
+                        <p className="text-sm leading-relaxed text-foreground">{m.body}</p>
+                        <p className={`mt-1.5 text-[10px] text-muted-foreground/50 ${isCustomer ? "text-right" : ""}`}>
+                          {fmtTime(m.created_at)}
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          )}
           <div ref={bottomRef} />
         </div>
 
-        <div className="flex gap-2">
-          <Input
-            placeholder="Type a message..."
-            value={newMsg}
-            onChange={(e) => setNewMsg(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void sendMessage(); } }}
-            className="flex-1"
-          />
-          <Button size="icon" disabled={sending || !newMsg.trim()} onClick={() => void sendMessage()}>
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
+        {/* Composer */}
+        <div className={`border-t border-border/40 p-3 ${isThreadDone ? "opacity-70" : ""}`}>
+          {isResolved && (
+            <p className="mb-2 text-center text-[11px] text-muted-foreground/70">
+              Sending a message will re-open this dispute.
+            </p>
+          )}
+          {isClosed ? (
+            <p className="py-2 text-center text-xs text-muted-foreground">
+              Thread is closed — re-open by contacting the business.
+            </p>
+          ) : (
+            <div className="flex gap-2">
+              <textarea
+                rows={3}
+                value={newMsg}
+                onChange={(e) => setNewMsg(e.target.value)}
+                placeholder={canSend ? "Type a message…" : "Thread is closed"}
+                disabled={!canSend}
+                className="flex-1 resize-none rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void sendMessage();
+                  }
+                }}
+              />
+              <button
+                disabled={sending || !newMsg.trim() || !canSend}
+                onClick={() => void sendMessage()}
+                className="flex h-10 w-10 shrink-0 self-end items-center justify-center rounded-xl bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
+            </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

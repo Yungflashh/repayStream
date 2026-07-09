@@ -10,8 +10,10 @@ const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem("theme") as Theme | null;
-    if (stored === "dark" || stored === "light") return stored;
-    return "light";
+    const version = localStorage.getItem("rs-tv");
+    // Only respect a stored preference if the user explicitly chose it post-rebrand
+    if (version === "2" && (stored === "dark" || stored === "light")) return stored;
+    return "dark";
   });
 
   useEffect(() => {
@@ -20,7 +22,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const toggle = () => {
+    localStorage.setItem("rs-tv", "2");
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
+  };
 
   return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;
 }

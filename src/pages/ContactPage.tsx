@@ -15,7 +15,7 @@ export function ContactPage() {
       <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="flex flex-col gap-8">
         <motion.div variants={staggerItem} transition={smooth}>
           <p className="text-xs font-bold uppercase tracking-widest text-accent">Support</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">Contact Us</h1>
+          <h1 className="rs-serif mt-2 text-4xl tracking-tight text-foreground">Contact Us</h1>
           <p className="mt-2 text-sm text-muted-foreground">Last updated: May 9, 2026</p>
         </motion.div>
 
