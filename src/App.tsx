@@ -11,12 +11,14 @@ import { CustomerDirectoryPage } from "@/pages/CustomerDirectoryPage";
 import { CustomerPortalPage } from "@/pages/CustomerPortalPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { DisputesPage } from "@/pages/DisputesPage";
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { HomePage } from "@/pages/HomePage";
 import { LoginPage } from "@/pages/LoginPage";
 import { PlanDetailPage } from "@/pages/PlanDetailPage";
 import { PlanPage } from "@/pages/PlanPage";
 import { PrivacyPage } from "@/pages/PrivacyPage";
 import { RegisterPage } from "@/pages/RegisterPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { SetPasswordPage } from "@/pages/SetPasswordPage";
 import { TermsPage } from "@/pages/TermsPage";
 
@@ -33,6 +35,8 @@ export default function App() {
       <Route path="/compliance" element={<CompliancePage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/set-password" element={<SetPasswordPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
