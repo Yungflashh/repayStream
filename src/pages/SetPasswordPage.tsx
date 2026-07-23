@@ -53,7 +53,7 @@ type TokenState =
   | { status: "loading" }
   | { status: "invalid"; message: string }
   | { status: "valid"; email: string; customerId: string }
-  | { status: "done"; customerId: string };
+  | { status: "done"; customerId: string; sessionSet: boolean };
 
 export function SetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -87,9 +87,9 @@ export function SetPasswordPage() {
     })();
   }, [token]);
 
-  // Auto-redirect after success
+  // Auto-redirect after success — only if this browser's session was actually set
   useEffect(() => {
-    if (state.status === "done") {
+    if (state.status === "done" && state.sessionSet) {
       const t = setTimeout(() => navigate(`/customer/${state.customerId}`), 1800);
       return () => clearTimeout(t);
     }
@@ -107,9 +107,13 @@ export function SetPasswordPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password }),
       });
-      const data = (await res.json()) as { ok?: boolean; customerId?: string; error?: string };
+      const data = (await res.json()) as { ok?: boolean; customerId?: string; sessionSet?: boolean; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Failed");
-      setState({ status: "done", customerId: data.customerId ?? (state as { customerId: string }).customerId });
+      setState({
+        status: "done",
+        customerId: data.customerId ?? (state as { customerId: string }).customerId,
+        sessionSet: data.sessionSet ?? true,
+      });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally { setSaving(false); }
@@ -165,15 +169,21 @@ export function SetPasswordPage() {
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground">Password set!</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Taking you to your portal…</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {state.sessionSet
+                  ? "Taking you to your portal…"
+                  : "The customer can now log in to their portal."}
+              </p>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/40">
-              <motion.div
-                className="h-full rounded-full bg-primary"
-                initial={{ width: 0 }} animate={{ width: "100%" }}
-                transition={{ duration: 1.6, ease: "linear" }}
-              />
-            </div>
+            {state.sessionSet && (
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/40">
+                <motion.div
+                  className="h-full rounded-full bg-primary"
+                  initial={{ width: 0 }} animate={{ width: "100%" }}
+                  transition={{ duration: 1.6, ease: "linear" }}
+                />
+              </div>
+            )}
           </motion.div>
         )}
 
