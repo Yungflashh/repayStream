@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { DisputeChat } from "@/components/dispute-chat";
+import { BackButton } from "@/components/BackButton";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { apiFetch, clearToken } from "@/lib/api";
 import { parseScheduleJsonForDisplay } from "@/lib/utils/schedule";
 import { useConfirm } from "@/lib/confirm";
@@ -213,10 +215,7 @@ export function PlanDetailPage() {
           </div>
           <h2 className="text-xl font-semibold">Plan not found</h2>
           <p className="text-sm text-muted-foreground">This plan may have been deleted or you don't have access.</p>
-          <Link to="/dashboard"
-            className="flex h-9 items-center gap-2 rounded-xl border border-border/40 bg-card px-4 text-sm font-medium text-foreground hover:bg-secondary/50">
-            <ArrowLeft className="h-4 w-4" />Back to dashboard
-          </Link>
+          <BackButton to="/dashboard" label="Back to dashboard" />
         </div>
       </div>
     );
@@ -494,6 +493,9 @@ export function PlanDetailPage() {
             <FileText className="h-4 w-4" />
           </button>
 
+          {/* Back button */}
+          <BackButton to="/dashboard" label="Back" className="hidden sm:inline-flex" />
+
           {/* Plan identity */}
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${st.bg}`}>
@@ -532,6 +534,7 @@ export function PlanDetailPage() {
                 </button>
               </div>
             )}
+            <NotificationsPanel panelPosition="right" />
           </div>
         </header>
 

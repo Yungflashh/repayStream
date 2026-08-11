@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FileText, TrendingUp, Users, MessageSquare, Settings, LogOut, Sun, Moon, X } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { apiFetch, clearToken } from "@/lib/api";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 import mainLogo from "@/assets/main_logo.png";
 
 export type BusinessNavItem = "plans" | "analytics" | "customers" | "disputes" | "settings";
@@ -67,10 +68,11 @@ export function BusinessSidebar({ active, onClose, businessName: nameProp }: Pro
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-sm shadow-primary/25">
             {name.slice(0, 1).toUpperCase()}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-foreground">{name}</p>
             <p className="text-[11px] text-muted-foreground">Business account</p>
           </div>
+          <NotificationsPanel panelPosition="left" />
         </div>
       )}
 

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, Users, X } from "lucide-react";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
+import { BackButton } from "@/components/BackButton";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { apiFetch } from "@/lib/api";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -134,17 +136,21 @@ export function CustomerDirectoryPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <p className="text-sm font-semibold text-foreground">Customers</p>
+          <p className="flex-1 text-sm font-semibold text-foreground">Customers</p>
+          <NotificationsPanel panelPosition="right" />
         </div>
 
         <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
 
           {/* Page heading */}
-          <motion.div {...ANIM}>
-            <h1 className="text-2xl font-bold text-foreground">Customers</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {loading ? "Loading…" : `${customers.length} customer${customers.length !== 1 ? "s" : ""} found`}
-            </p>
+          <motion.div {...ANIM} className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Customers</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {loading ? "Loading…" : `${customers.length} customer${customers.length !== 1 ? "s" : ""} found`}
+              </p>
+            </div>
+            <BackButton to="/dashboard" />
           </motion.div>
 
           {/* Search bar */}

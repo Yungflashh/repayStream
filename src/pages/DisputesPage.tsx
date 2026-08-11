@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { apiFetch, clearToken } from "@/lib/api";
+import { BackButton } from "@/components/BackButton";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 import mainLogo from "@/assets/main_logo.png";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -361,9 +363,11 @@ export function DisputesPage() {
           >
             <Menu className="h-4 w-4" />
           </button>
-          <span className="text-sm font-semibold text-foreground">
+          <span className="flex-1 truncate text-sm font-semibold text-foreground">
             {activeId && threadDetail ? threadDetail.subject : "Customer disputes"}
           </span>
+          <NotificationsPanel panelPosition="right" />
+          <BackButton to="/dashboard" label="" className="!px-2" />
         </header>
 
         {/* Content area */}

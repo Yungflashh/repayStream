@@ -67,6 +67,25 @@
   ::-webkit-scrollbar-track { @apply bg-muted; }
   ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
   ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
+
+  /* Make the native calendar picker icon visible in dark mode (Chrome/Edge
+     renders it black-on-black otherwise, hiding the affordance on desktop). */
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator,
+  .dark input[type="month"]::-webkit-calendar-picker-indicator,
+  .dark input[type="week"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+    opacity: 0.7;
+  }
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"],
+  input[type="month"],
+  input[type="week"] {
+    cursor: pointer;
+  }
 }
 
 .rs-serif {

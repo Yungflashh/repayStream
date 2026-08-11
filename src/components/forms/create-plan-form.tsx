@@ -38,6 +38,16 @@ function Field({ id, label, hint, children }: { id?: string; label: string; hint
 const inputCls = "h-11 w-full rounded-xl border border-border/50 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all disabled:opacity-50";
 const selectCls = inputCls + " cursor-pointer";
 
+// Native `<input type="date">` on desktop only opens the picker if the user
+// clicks the tiny calendar-icon on the right. Calling showPicker() on click
+// makes the entire input act as the affordance.
+function openDatePicker(e: React.MouseEvent<HTMLInputElement>) {
+  const el = e.currentTarget;
+  if (typeof (el as HTMLInputElement & { showPicker?: () => void }).showPicker === "function") {
+    try { (el as HTMLInputElement & { showPicker: () => void }).showPicker(); } catch { /* focus-outside restrictions */ }
+  }
+}
+
 // ── Section header ─────────────────────────────────────────────────────────────
 
 function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
@@ -335,6 +345,7 @@ export function CreatePlanForm({ onCreated }: { onCreated?: () => void }) {
                 <div className="relative">
                   <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input id="due" type="date" required min={minDate} value={dueDate}
+                    onClick={openDatePicker}
                     onChange={(e) => setDueDate(e.target.value)} className={inputCls + " pl-9"} />
                 </div>
               </Field>
@@ -360,6 +371,7 @@ export function CreatePlanForm({ onCreated }: { onCreated?: () => void }) {
                   <div className="relative">
                     <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input id="firstDue" type="date" min={minDate} value={firstDueDate}
+                      onClick={openDatePicker}
                       onChange={(e) => setFirstDueDate(e.target.value)} className={inputCls + " pl-9"} />
                   </div>
                 </Field>
@@ -387,6 +399,7 @@ export function CreatePlanForm({ onCreated }: { onCreated?: () => void }) {
                           </Field>
                           <Field label="Due date">
                             <input type="date" min={minDate} value={row.due_date}
+                              onClick={openDatePicker}
                               onChange={(e) => { const n = [...customRows]; n[i] = { ...n[i], due_date: e.target.value }; setCustomRows(n); }}
                               className={inputCls + " h-10"} />
                           </Field>

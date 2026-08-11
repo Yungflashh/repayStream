@@ -11,6 +11,7 @@ import { AnimatePresence, motion as m } from "framer-motion";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
 import { BusinessSetupForm } from "@/components/business-setup-form";
 import { CreatePlanForm } from "@/components/forms/create-plan-form";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { apiFetch } from "@/lib/api";
 import { staggerContainer, staggerItem, smooth } from "@/lib/motion";
 
@@ -178,7 +179,8 @@ export function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <p className="text-sm font-semibold text-foreground">Plans</p>
+            <p className="flex-1 text-sm font-semibold text-foreground">Plans</p>
+            <NotificationsPanel panelPosition="right" />
           </div>
           <div className="flex flex-1 items-center justify-center">
             <div className="flex flex-col items-center gap-3">

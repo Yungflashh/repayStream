@@ -10,6 +10,7 @@ import {
   Eye, EyeOff,
 } from "lucide-react";
 import { DisputeChat } from "@/components/dispute-chat";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { apiFetch, clearToken } from "@/lib/api";
 import { parseScheduleJsonForDisplay } from "@/lib/utils/schedule";
 import { useTheme } from "@/lib/theme";
@@ -406,12 +407,15 @@ export function CustomerPortalPage() {
               )}
             </div>
           </div>
-          {overdueCount > 0 && (
-            <div className="flex items-center gap-2 rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-1.5">
-              <Bell className="h-3.5 w-3.5 text-rose-500" />
-              <span className="text-xs font-medium text-rose-500">{overdueCount} plan{overdueCount > 1 ? "s" : ""} need attention</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {overdueCount > 0 && (
+              <div className="hidden items-center gap-2 rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-1.5 sm:flex">
+                <Bell className="h-3.5 w-3.5 text-rose-500" />
+                <span className="text-xs font-medium text-rose-500">{overdueCount} plan{overdueCount > 1 ? "s" : ""} need attention</span>
+              </div>
+            )}
+            <NotificationsPanel panelPosition="right" />
+          </div>
         </header>
 
         {/* Page content */}

@@ -9,6 +9,8 @@ import { apiFetch, clearToken } from "@/lib/api";
 import { useTheme } from "@/lib/theme";
 import { fadeInUp, smooth } from "@/lib/motion";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
+import { BackButton } from "@/components/BackButton";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -412,18 +414,22 @@ export function BusinessSettingsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <p className="text-sm font-semibold text-foreground">Settings</p>
+          <p className="flex-1 text-sm font-semibold text-foreground">Settings</p>
+          <NotificationsPanel panelPosition="right" />
         </div>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} transition={smooth} className="flex flex-col gap-6 lg:gap-8">
 
             {/* Heading */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Settings</p>
-              <h1 className="mt-1 text-2xl font-bold text-foreground" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>
-                Business profile
-              </h1>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Settings</p>
+                <h1 className="mt-1 text-2xl font-bold text-foreground" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>
+                  Business profile
+                </h1>
+              </div>
+              <BackButton to="/dashboard" />
             </div>
 
             {/* Grid */}

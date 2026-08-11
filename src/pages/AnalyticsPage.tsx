@@ -4,6 +4,8 @@ import {
   TrendingUp, Clock, Activity, CheckCircle2,
 } from "lucide-react";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
+import { BackButton } from "@/components/BackButton";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, Legend,
@@ -159,15 +161,19 @@ export function AnalyticsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <p className="text-sm font-semibold text-foreground">Analytics</p>
+          <p className="flex-1 text-sm font-semibold text-foreground">Analytics</p>
+          <NotificationsPanel panelPosition="right" />
         </div>
 
         <main className="flex-1 p-6 space-y-8 max-w-6xl mx-auto w-full">
 
           {/* Page heading */}
-          <motion.div {...ANIM}>
-            <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Revenue, plan health, and dispute overview</p>
+          <motion.div {...ANIM} className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Revenue, plan health, and dispute overview</p>
+            </div>
+            <BackButton to="/dashboard" />
           </motion.div>
 
           {/* ── A. Stats strip ──────────────────────────────────────────────── */}
